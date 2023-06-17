@@ -7,7 +7,7 @@ from torchvision import datasets
 from torchvision import transforms
 from torchvision.utils import save_image
 
-import numpy as np
+import numpy as np 
 import datetime
 import os, sys
 from matplotlib.pyplot import imshow, imsave
@@ -15,11 +15,7 @@ from matplotlib.pyplot import imshow, imsave
 
 MODEL_NAME = 'Conditional-DCGAN'
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-transform = transforms.Compose([transforms.ToTensor(),
-                                transforms.Normalize(mean=[0.5],
-                                std=[0.5])]
-)
-mnist = datasets.MNIST(root='D:/Project/AI_Intro/data/', train=True, transform=transform, download=True)
+
 
 
 def to_onehot(x, num_classes=10):
@@ -127,76 +123,76 @@ class Generator(nn.Module):
         y_ = self.conv(y_) # (N, 28, 28)
         return y_
     
-
-D = Discriminator().to(DEVICE)
-G = Generator().to(DEVICE)
-transform = transforms.Compose([transforms.ToTensor(),
+if __name__=='__main__':
+    D = Discriminator().to(DEVICE)
+    G = Generator().to(DEVICE)
+    transform = transforms.Compose([transforms.ToTensor(),
                                 transforms.Normalize(mean=[0.5],
                                 std=[0.5])]
-)   
+    )   
     
-mnist = datasets.MNIST(root='D:/Project/AI_Intro/data/', train=True, transform=transform, download=True)
+    mnist = datasets.MNIST(root='D:/Project/AI_Intro/data/', train=True, transform=transform, download=True)
     
-batch_size = 64
+    batch_size = 64
     
-data_loader = DataLoader(dataset=mnist, batch_size=batch_size, shuffle=True, drop_last=True, pin_memory=True)
+    data_loader = DataLoader(dataset=mnist, batch_size=batch_size, shuffle=True, drop_last=True, pin_memory=True)
     
-criterion = nn.BCELoss()
-D_opt = torch.optim.Adam(D.parameters(), lr=0.0005, betas=(0.5, 0.999))
-G_opt = torch.optim.Adam(G.parameters(), lr=0.0005, betas=(0.5, 0.999))
+    criterion = nn.BCELoss()
+    D_opt = torch.optim.Adam(D.parameters(), lr=0.0005, betas=(0.5, 0.999))
+    G_opt = torch.optim.Adam(G.parameters(), lr=0.0005, betas=(0.5, 0.999))
 
-max_epoch = 30 # need more than 20 epochs for training generator
-step = 0
-n_critic = 1 # for training more k steps about Discriminator
-n_noise = 100
+    max_epoch = 30 # need more than 20 epochs for training generator
+    step = 0
+    n_critic = 1 # for training more k steps about Discriminator
+    n_noise = 100
     
-D_labels = torch.ones([batch_size, 1]).to(DEVICE) # Discriminator Label to real
-D_fakes = torch.zeros([batch_size, 1]).to(DEVICE) # Discriminator Label to fake
+    D_labels = torch.ones([batch_size, 1]).to(DEVICE) # Discriminator Label to real
+    D_fakes = torch.zeros([batch_size, 1]).to(DEVICE) # Discriminator Label to fake
     
-for epoch in range(max_epoch):
-    for idx, (images, labels) in enumerate(data_loader):
-        # Training Discriminator
-        x = images.to(DEVICE)
-        y = labels.view(batch_size, 1)
-        y = to_onehot(y).to(DEVICE)
-        x_outputs = D(x, y)
-        D_x_loss = criterion(x_outputs, D_labels)
+    for epoch in range(max_epoch):
+        for idx, (images, labels) in enumerate(data_loader):
+            # Training Discriminator
+            x = images.to(DEVICE)
+            y = labels.view(batch_size, 1)
+            y = to_onehot(y).to(DEVICE)
+            x_outputs = D(x, y)
+            D_x_loss = criterion(x_outputs, D_labels)
 
-        z = torch.randn(batch_size, n_noise).to(DEVICE)
-        z_outputs = D(G(z, y), y)
-        D_z_loss = criterion(z_outputs, D_fakes)
-        D_loss = D_x_loss + D_z_loss
-        
-        D.zero_grad()
-        D_loss.backward()
-        D_opt.step()
-
-        if step % n_critic == 0:
-            # Training Generator
             z = torch.randn(batch_size, n_noise).to(DEVICE)
             z_outputs = D(G(z, y), y)
-            G_loss = criterion(z_outputs, D_labels)
-
+            D_z_loss = criterion(z_outputs, D_fakes)
+            D_loss = D_x_loss + D_z_loss
+        
             D.zero_grad()
-            G.zero_grad()
-            G_loss.backward()
-            G_opt.step()
+            D_loss.backward()
+            D_opt.step()
+
+            if step % n_critic == 0:
+                # Training Generator
+                z = torch.randn(batch_size, n_noise).to(DEVICE)
+                z_outputs = D(G(z, y), y)
+                G_loss = criterion(z_outputs, D_labels)
+
+                D.zero_grad()
+                G.zero_grad()
+                G_loss.backward()
+                G_opt.step()
         
-        if step % 500 == 0:
-            print('Epoch: {}/{}, Step: {}, D Loss: {}, G Loss: {}'.format(epoch, max_epoch, step, D_loss.item(), G_loss.item()))
+            if step % 500 == 0:
+                print('Epoch: {}/{}, Step: {}, D Loss: {}, G Loss: {}'.format(epoch, max_epoch, step, D_loss.item(), G_loss.item()))
         
-        if step % 1000 == 0:
-            G.eval()
-            img = get_sample_image(G, n_noise)
-            imsave('D:/Project/AI_Intro/samples/{}_step{}.jpg'.format(MODEL_NAME, str(step).zfill(3)), img, cmap='gray')
-            G.train()
-        step += 1
+            if step % 1000 == 0:
+                G.eval()
+                img = get_sample_image(G, n_noise)
+                imsave('D:/Project/AI_Intro/samples/{}_step{}.jpg'.format(MODEL_NAME, str(step).zfill(3)), img, cmap='gray')
+                G.train()
+                step += 1
 
 
-torch.save(D.state_dict(), 'Discriminator.pth')
-torch.save(G.state_dict(), 'Generator.pth')
+    torch.save(D.state_dict(), 'Discriminator.pth')
+    torch.save(G.state_dict(), 'Generator.pth')
 
 
-# generation to image
-G.eval()
-imshow(get_sample_image(G, n_noise), cmap='gray')
+    # generation to image
+    G.eval()
+    imshow(get_sample_image(G, n_noise), cmap='gray')
