@@ -32,6 +32,30 @@ from cDCGAN import Generator
 返回生成的图像列表，类型为PIL图像。
 
 ## 调用示例
+```python
+import torch
+import torch.nn as nn
+import torchvision.transforms as transforms
+import matplotlib.pyplot as plt
+from AiGcMn import AiGcMn
+
+generator_path = 'Generator.pth'
+aigcmn = AiGcMn(generator_path)
+
+# Generate 10 images with different class labels
+class_labels = [1, 5, 2, 9, 4, 7, 0, 3, 8, 6]
+generated_images = aigcmn.generate_images(num_images=10, class_labels=class_labels)
+
+# Display the generated images
+fig, axes = plt.subplots(2, 5, figsize=(10, 4))
+for i, ax in enumerate(axes.flatten()):
+    ax.imshow(generated_images[i],cmap='gray')
+    ax.axis('off')
+
+plt.tight_layout()
+plt.show()
+```
+代码与输出示例请见[example]:https://github.com/xuhengjing020504/NIS4307-Group-Project/blob/main/example.ipynb
 
 
 ## 模型效果展示
