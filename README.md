@@ -55,7 +55,7 @@ for i, ax in enumerate(axes.flatten()):
 plt.tight_layout()
 plt.show()
 ```
-代码与输出示例请见[example]:https://github.com/xuhengjing020504/NIS4307-Group-Project/blob/main/example.ipynb
+代码与输出示例请见[example](https://github.com/xuhengjing020504/NIS4307-Group-Project/blob/main/example.ipynb)
 
 
 ## 模型效果展示
