@@ -47,9 +47,7 @@ def get_sample_image(G, n_noise=100):
 
 
 class Discriminator(nn.Module):
-    """
-        Convolutional Discriminator for MNIST
-    """
+
     def __init__(self, in_channel=1, input_size=784, condition_size=10, num_classes=1):
         super(Discriminator, self).__init__()
         self.transform = nn.Sequential(
@@ -91,9 +89,7 @@ class Discriminator(nn.Module):
     
     
 class Generator(nn.Module):
-    """
-        Convolutional Generator for MNIST
-    """
+
     def __init__(self, input_size=100, condition_size=10):
         super(Generator, self).__init__()
         self.fc = nn.Sequential(
